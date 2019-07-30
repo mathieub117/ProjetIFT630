@@ -1,6 +1,7 @@
 #include "blockchain.h"
 #include <string>
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 
@@ -15,9 +16,10 @@ int main()
 	cout << "4- cuda -> part une version cuda GPU de block mining" << endl;
 	cout << "5- quit" << endl;
 
-	uint32_t difficulty = 4;
+	uint32_t difficulty = 5;
 	Blockchain blockchain = Blockchain(difficulty);
 	int blockCount = blockchain.BlockCount();
+	long calcTime;
 	
 	while(true) 
 	{
@@ -32,22 +34,26 @@ int main()
 			cin >> to;
 			cin >> a;
 			amount = std::stod(a);
-			cout << "Mining block " << ++blockCount << "..." << endl;
-			blockchain.AddBlock(Block(blockCount, from, to, amount), executionType::sequential);
+			cout << "Mining block " << blockCount << "..." << endl;
+			blockchain.AddBlock(Block(blockCount++, from, to, amount), executionType::sequential);
 		}
 		else if(s.find("sequentiel") != string::npos) 
 		{
-			for (int i = 0; i < 50; i++) 
+			calcTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+			for (int i = 0; i < 10; i++) 
 			{
 				blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 0.50), executionType::sequential);
 			}
+			cout << "Temps pour séquentiel: " << chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << endl;
 		}
 		else if(s.find("multithread") != string::npos) 
 		{
-			for (int i = 0; i < 50; i++) 
+			calcTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+			for (int i = 0; i < 10; i++) 
 			{
 				blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 0.50), executionType::multithread);
 			}
+			cout << "Temps pour multithread: " << chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << endl;
 		}
 		else if(s.find("quit") != string::npos) 
 		{

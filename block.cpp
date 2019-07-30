@@ -47,6 +47,7 @@ void Block::MineBlock(uint32_t difficulty)
 //MultiThread
 void Block::MineBlockMultiThread(uint32_t difficulty) 
 {
+	hashFound = false;
 	uint8_t THREAD_POOL_SIZE = 8;
 	thread threads[THREAD_POOL_SIZE];
 	char cstr[difficulty + 1];
@@ -83,7 +84,7 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 		nonceThread += threadIncrement;
 		h = CalculateHash(nonceThread);
 	} 
-	while (h.substr(0, difficulty) != str || !hashFound);
+	while (h.substr(0, difficulty) != str);
 	hash = h;
 	nonce = nonceThread;
 	hashFound = true;
