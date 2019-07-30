@@ -18,6 +18,10 @@ int main()
 	uint32_t difficulty = 4;
 	Blockchain blockchain = Blockchain(difficulty);
 	int blockCount = blockchain.BlockCount();
+
+	long sequentialTime, sequentialTimeEnd;
+	long multiThreadTime, multiThreadTimeEnd;
+	long openCLTime, openCLTimeEnd;
 	
 	while(true) 
 	{
@@ -37,17 +41,27 @@ int main()
 		}
 		else if(s.find("sequentiel") != string::npos) 
 		{
+			cout << "Debut du test sequentiel" << endl;
+			sequentialTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 			for (int i = 0; i < 50; i++) 
 			{
 				blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 0.50), executionType::sequential);
 			}
+			sequentialTimeEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			cout << "Fin du test sequentiel" << endl;
+			std::cout << "Temps pour l'algorithme sequentiel: " << (sequentialTimeEnd - sequentialTime) / 1000 << "sec." << std::endl;
 		}
 		else if(s.find("multithread") != string::npos) 
 		{
+			cout << "Debut du test multithread" << endl;
+			sequentialTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 			for (int i = 0; i < 50; i++) 
 			{
 				blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 0.50), executionType::multithread);
 			}
+			sequentialTimeEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			cout << "Fin du test multithread" << endl;
+			std::cout << "Temps pour multithread: " << (sequentialTimeEnd - sequentialTime) / 1000 << "sec." << std::endl;
 		}
 		else if(s.find("quit") != string::npos) 
 		{
