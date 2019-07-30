@@ -21,7 +21,7 @@ string Block::CurrentHash()
 	return hash;
 }
 
-//Voici la méthode séquentiel...
+//Voici la mï¿½thode sï¿½quentiel...
 void Block::MineBlock(uint32_t difficulty) 
 {
 	char cstr[difficulty + 1];
