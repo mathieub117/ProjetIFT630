@@ -1,7 +1,2 @@
-gcc -lstdc++ \
-    -o TestChain \
-    -std=c++11 \
-    -stdlib=libc++ \
-    -x c++ \
-    main.cpp Block.cpp Blockchain.cpp sha256.cpp
-./TestChain
+g++ main.cpp block.cpp blockchain.cpp sha256.cpp -o projet
+./projet

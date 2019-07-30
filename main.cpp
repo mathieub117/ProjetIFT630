@@ -1,16 +1,36 @@
-#include "Blockchain.h"
+#include "blockchain.h"
+#include <string>
+#include <iostream>
+
+using namespace std;
 
 int main() {
-	Blockchain bChain = Blockchain();
+	Blockchain blockchain = Blockchain();
 
-	cout << "Mining block 1..." << endl;
-	bChain.AddBlock(Block(1, "Block 1 Data"));
+	cout << "Bienvenue dans le projet de blockchain!" << endl << endl;
+	cout << "Voici les commandes: " << endl;
+	cout << "1- addBlock DATA (DATA est un string)" << endl;
+	cout << "2- quit" << endl;
+	
+	int blockCount = 0;
+	while(true) 
+	{
+		string s;
+		cin >> s;
 
-	cout << "Mining block 2..." << endl;
-	bChain.AddBlock(Block(2, "Block 2 Data"));
-
-	cout << "Mining block 3..." << endl;
-	bChain.AddBlock(Block(3, "Block 3 Data"));
+		if(s.find("addBlock") != string::npos) 
+		{
+			string data;
+			cin >> data;
+			cout << "Mining block " << ++blockCount << "..." << endl;
+			blockchain.AddBlock(Block(blockCount, data));
+		}
+		else if(s.find("quit") != string::npos) 
+		{
+			cout << "quitter..." << endl;
+			break;
+		}
+	}
 
 	return 0;
 }
