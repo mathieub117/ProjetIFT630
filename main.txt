@@ -1,2 +1,2 @@
-g++ main.cpp block.cpp blockchain.cpp sha256.cpp -o projet
+g++ main.cpp block.cpp blockchain.cpp sha256.cpp -o projet -pthread
 ./projet
