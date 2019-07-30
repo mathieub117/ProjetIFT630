@@ -61,7 +61,7 @@ void Block::MineBlockMultiThread(uint32_t difficulty)
 
 	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++) 
 	{
-		threads[i] = thread(Block::MineBlockThread, str, i, THREAD_POOL_SIZE, difficulty);
+		threads[i] = thread(MineBlockThread, str, i, THREAD_POOL_SIZE, difficulty);
 	}
 
 	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++) 
