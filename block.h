@@ -22,7 +22,7 @@ private:
 	string data;
 	string hash;
 	time_t timestamp;
-	string CalculateHash(int64_t n = 0) const;
+	string CalculateHash(int64_t n) const;
 
 	//Multithread
 	void MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncrement, uint32_t difficulty);
