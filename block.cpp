@@ -38,7 +38,7 @@ void Block::MineBlock(uint32_t difficulty)
 		str += '0';
 	}
 	
-	str += '\0';
+	
 
 	do 
 	{
