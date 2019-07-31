@@ -1,10 +1,17 @@
 #include "block.h"
 #include "sha256.h"
+#include "lib/msglib.h"
+
 #include <sstream>
 #include <thread>
 #include <atomic>
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <Windows.h>
 
 atomic<bool> hashFound(false);
+typedef struct messageBuffer {string hash};
 
 Block::Block(uint32_t indexIn, string from, string to, double amount)
 {	
@@ -24,15 +31,14 @@ string Block::CurrentHash()
 //Voici la m�thode s�quentiel...
 void Block::MineBlock(uint32_t difficulty) 
 {
-	char cstr[difficulty + 1];
+	string str;
 
 	for (uint32_t i = 0; i < difficulty; ++i) 
 	{
-		cstr[i] = '0';
+		str += '0';
 	}
 	
-	cstr[difficulty] = '\0';
-	string str(cstr);
+	str += '\0';
 
 	do 
 	{
@@ -88,6 +94,17 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 	hash = h;
 	nonce = nonceThread;
 	hashFound = true;
+}
+
+void Block::MineBlockCUDA(uint32_t difficulty)
+{
+	startupProcess("cuda.exe", "App " + difficulty + " " + _getpid());
+	messageBuffer message;
+	key_t key_porte = 99887766;
+	Port Port1(key_porte);
+	Port1.Recoit(&message, sizeof(string) * 64);
+	hash = message.hash;
+	pid_t test;
 }
 
 string Block::CalculateHash(int64_t n) const
