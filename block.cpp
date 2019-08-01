@@ -1,17 +1,15 @@
+#include "mailslot.h"
 #include "block.h"
 #include "sha256.h"
-#include "lib/msglib.h"
-
 #include <sstream>
 #include <thread>
 #include <atomic>
 #include <stdio.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #include <Windows.h>
+#include <process.h>
 
 atomic<bool> hashFound(false);
-typedef struct messageBuffer {string hash};
+typedef struct messageBuffer { string hash; };
 
 Block::Block(uint32_t indexIn, string from, string to, double amount)
 {	
@@ -37,8 +35,6 @@ void Block::MineBlock(uint32_t difficulty)
 	{
 		str += '0';
 	}
-	
-	str += '\0';
 
 	do 
 	{
@@ -54,17 +50,14 @@ void Block::MineBlock(uint32_t difficulty)
 void Block::MineBlockMultiThread(uint32_t difficulty) 
 {
 	hashFound = false;
-	uint8_t THREAD_POOL_SIZE = 8;
+	const uint8_t THREAD_POOL_SIZE = 8;
 	thread threads[THREAD_POOL_SIZE];
-	char cstr[difficulty + 1];
+	string str;
 
 	for (uint32_t i = 0; i < difficulty; ++i) 
 	{
-		cstr[i] = '0';
+		str[i] = '0';
 	}
-
-	cstr[difficulty] = '\0';
-	string str(cstr);
 
 	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++) 
 	{	
@@ -98,13 +91,17 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 
 void Block::MineBlockCUDA(uint32_t difficulty)
 {
-	startupProcess("cuda.exe", "App " + difficulty + " " + _getpid());
-	messageBuffer message;
-	key_t key_porte = 99887766;
-	Port Port1(key_porte);
-	Port1.Recoit(&message, sizeof(string) * 64);
-	hash = message.hash;
-	pid_t test;
+	LPSTR args;
+	stringstream ss;
+	ss << "App " << difficulty << " " << _getpid();
+	strcpy(args, ss.str().c_str());
+
+	startupProcess("cuda.exe", args);
+
+	MakeSlot((LPSTR)"projetIFT630");
+	ReadSlot();
+	hash = lpszBuffer;
+	cout << "Block mined: " << hash << endl;
 }
 
 string Block::CalculateHash(int64_t n) const
@@ -119,3 +116,32 @@ string Block::CalculateHash(int64_t n) const
 	return sha256(ss.str());
 }
 
+void startupProcess(LPCSTR lpApplicationName, LPSTR lpCommandLine)
+{
+	// additional information
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+
+	// set the size of the structures
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	// start the program up
+	CreateProcessA
+	(
+		lpApplicationName,   // the path
+		lpCommandLine,                // Command line
+		NULL,                   // Process handle not inheritable
+		NULL,                   // Thread handle not inheritable
+		FALSE,                  // Set handle inheritance to FALSE
+		CREATE_NEW_CONSOLE,     // Opens file in a separate console
+		NULL,           // Use parent's environment block
+		NULL,           // Use parent's starting directory 
+		&si,            // Pointer to STARTUPINFO structure
+		&pi           // Pointer to PROCESS_INFORMATION structure
+	);
+	// Close process and thread handles. 
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+}
