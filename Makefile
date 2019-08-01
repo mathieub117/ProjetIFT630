@@ -286,7 +286,7 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-projetIFT630.o:projetIFT630.cu
+projetIFT630.o:cudamain.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 projetIFT630: projetIFT630.o

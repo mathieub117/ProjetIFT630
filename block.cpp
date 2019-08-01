@@ -1,12 +1,25 @@
 #include "mailslot.h"
 #include "block.h"
 #include "sha256.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include "projetIFT630.cu"
+
 #include <sstream>
 #include <thread>
 #include <atomic>
 #include <stdio.h>
-#include <Windows.h>
-#include <process.h>
+#include <iostream>
+#include <chrono>
+#include <cmath>
+#include <iomanip>
+#include <string>
+#include <cassert>
+
+#define SHOW_INTERVAL_MS 500
+#define BLOCK_SIZE 256
+#define SHA_PER_ITERATIONS 8'388'608
+#define NUMBLOCKS (SHA_PER_ITERATIONS + BLOCK_SIZE - 1) / BLOCK_SIZE
 
 atomic<bool> hashFound(false);
 typedef struct messageBuffer { string hash; };
