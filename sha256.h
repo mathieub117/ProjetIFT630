@@ -12,20 +12,20 @@ protected:
 	const static uint32 sha256_k[];
 	static const unsigned int SHA224_256_BLOCK_SIZE = (512 / 8);
 public:
-	void init();
-	void update(const unsigned char *message, unsigned int len);
-	void final(unsigned char *digest);
+	__device__ void init();
+	__device__ void update(const unsigned char *message, unsigned int len);
+	__device__ void final(unsigned char *digest);
 	static const unsigned int DIGEST_SIZE = (256 / 8);
 
 protected:
-	void transform(const unsigned char *message, unsigned int block_nb);
+	__device__ void transform(const unsigned char *message, unsigned int block_nb);
 	unsigned int m_tot_len;
 	unsigned int m_len;
 	unsigned char m_block[2 * SHA224_256_BLOCK_SIZE];
 	uint32 m_h[8];
 };
 
-std::string sha256(std::string input);
+__device__ std::string sha256(std::string input);
 
 #define SHA2_SHFR(x, n)    (x >> n)
 #define SHA2_ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))
