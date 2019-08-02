@@ -40,7 +40,7 @@ Pcs::Pcs(char *fichier, char* hash, char* difficulty)
       perror("Classe Pcs Function Fork (Fork)");      
    else 
      if (pcsid == 0)
-       if (execl(fichier, fichier, hash, difficulty (char *)0)== -1)
+       if (execl(fichier, fichier, hash, difficulty, (char *)0)== -1)
           perror("Classe Pcs Function Fork (exec)");
 }
 /*******************************************************************/
