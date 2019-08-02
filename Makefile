@@ -288,8 +288,11 @@ endif
 
 projetIFT630.o:cudamain.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+	
+msglib.o:msglib.cc
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-projetIFT630: projetIFT630.o
+projetIFT630: projetIFT630.o msglib.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 	$(EXEC) mkdir -p ./bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 	$(EXEC) cp $@ ./bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
@@ -298,7 +301,7 @@ run: build
 	$(EXEC) ./projetIFT630
 
 clean:
-	rm -f projetIFT630 projetIFT630.o
+	rm -f projetIFT630 projetIFT630.o msglib.o
 	rm -rf ./bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/projetIFT630
 
 clobber: clean

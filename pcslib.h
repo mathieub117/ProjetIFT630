@@ -13,16 +13,17 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
-
+#include <time.h>
 
 class Pcs {
    private:
-      int pcsid;
+      pid_t pcsid;
+      time_t t;
       int status;
    public:
       Pcs();
       Pcs(char *fichier, char *hash, char *difficulty);
-      void Fork(char *fichier);
+      void Fork(char *fichier, char *hash, char *difficulty);
       int Join();
       void Detruit();
 };
