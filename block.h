@@ -26,6 +26,4 @@ private:
 
 	//Multithread
 	void MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncrement, uint32_t difficulty);
-
-	void MineBlockCUDA(uint32_t difficulty);
 };
