@@ -19,7 +19,6 @@
 #define NUMBLOCKS (SHA_PER_ITERATIONS + BLOCK_SIZE - 1) / BLOCK_SIZE
 
 atomic<bool> hashFound(false);
-typedef struct messageBuffer { string hash; };
 
 Block::Block(uint32_t indexIn, string from, string to, double amount)
 {
@@ -66,9 +65,8 @@ void Block::MineBlockMultiThread(uint32_t difficulty)
 
 	for (uint32_t i = 0; i < difficulty; ++i)
 	{
-		str[i] = '0';
+		str  += '0';
 	}
-
 	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++)
 	{
 		threads[i] = thread(&Block::MineBlockThread, this, str, i, THREAD_POOL_SIZE, difficulty);
