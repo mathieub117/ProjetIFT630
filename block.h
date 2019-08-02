@@ -18,7 +18,7 @@ public:
 	void MineBlockMultiThread(uint32_t difficulty);
 private:
 	uint32_t index;
-	int64_t nonce;
+	//int64_t nonce; //On va l'utiliser comme variable local et non comme attribut objet
 	string data;
 	string hash;
 	time_t timestamp;

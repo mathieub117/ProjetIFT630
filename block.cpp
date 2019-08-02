@@ -19,7 +19,7 @@
 #define NUMBLOCKS (SHA_PER_ITERATIONS + BLOCK_SIZE - 1) / BLOCK_SIZE
 
 atomic<bool> hashFound(false);
-typedef struct messageBuffer { string hash; };
+struct messageBuffer { string hash; };
 
 Block::Block(uint32_t indexIn, string from, string to, double amount)
 {
@@ -27,7 +27,6 @@ Block::Block(uint32_t indexIn, string from, string to, double amount)
 	stringstream ss;
 	ss << "From:" << from << "\nTo:" << to << "\nAmount:" << amount;
 	data = ss.str();
-	nonce = -1;
 	timestamp = time(nullptr);
 }
 
@@ -36,10 +35,11 @@ string Block::CurrentHash()
 	return hash;
 }
 
-//Voici la m�thode s�quentiel...
+//Voici la methode sequentiel...
 void Block::MineBlock(uint32_t difficulty)
 {
 	string str;
+	int64_t nonce = -1;
 
 	for (uint32_t i = 0; i < difficulty; ++i)
 	{
@@ -49,7 +49,7 @@ void Block::MineBlock(uint32_t difficulty)
 	do
 	{
 		nonce++;
-		hash = CalculateHash(0);
+		hash = CalculateHash(nonce);
 	}
 	while (hash.substr(0, difficulty) != str);
 
@@ -86,6 +86,7 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 {
 	int64_t nonceThread = threadIndex;
 	string h;
+
 	do
 	{
 		if(hashFound)
@@ -101,14 +102,9 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 
 
 
-string Block::CalculateHash(int64_t n) const
+string Block::CalculateHash(int64_t nonce) const
 {
-	int64_t nonceCopy;
-
-	if(n != 0) nonceCopy = n;
-	else nonceCopy = nonce;
-
 	stringstream ss;
-	ss << index << timestamp << data << nonceCopy << previousHash;
+	ss << index << timestamp << data << nonce << previousHash;
 	return sha256(ss.str());
 }
