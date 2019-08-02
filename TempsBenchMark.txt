@@ -1,0 +1,4 @@
+Test fait sur machine DINF-1023-16
+Cuda: 3317ms, 3343ms, 3325ms, 3322ms, 3323ms, 3324ms, 3318ms, 3321ms,3324ms,3336ms
+MultiThread:
+Sequentiel: 47255ms, 45941ms, 44615ms, 56618ms, 45988ms, 46261ms, 63699ms,45349ms, 44216ms, 19124ms

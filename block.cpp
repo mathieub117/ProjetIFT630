@@ -1,4 +1,4 @@
-#include "mailslot.h"
+//#include "mailslot.h"
 #include "block.h"
 #include "sha256.h"
 
@@ -22,7 +22,7 @@ atomic<bool> hashFound(false);
 typedef struct messageBuffer { string hash; };
 
 Block::Block(uint32_t indexIn, string from, string to, double amount)
-{	
+{
 	index = indexIn;
 	stringstream ss;
 	ss << "From:" << from << "\nTo:" << to << "\nAmount:" << amount;
@@ -31,50 +31,50 @@ Block::Block(uint32_t indexIn, string from, string to, double amount)
 	timestamp = time(nullptr);
 }
 
-string Block::CurrentHash() 
+string Block::CurrentHash()
 {
 	return hash;
 }
 
 //Voici la m�thode s�quentiel...
-void Block::MineBlock(uint32_t difficulty) 
+void Block::MineBlock(uint32_t difficulty)
 {
 	string str;
 
-	for (uint32_t i = 0; i < difficulty; ++i) 
+	for (uint32_t i = 0; i < difficulty; ++i)
 	{
 		str += '0';
 	}
 
-	do 
+	do
 	{
 		nonce++;
 		hash = CalculateHash(0);
-	} 
+	}
 	while (hash.substr(0, difficulty) != str);
 
 	cout << "Block mined: " << hash << endl;
 }
 
 //MultiThread
-void Block::MineBlockMultiThread(uint32_t difficulty) 
+void Block::MineBlockMultiThread(uint32_t difficulty)
 {
 	hashFound = false;
 	const uint8_t THREAD_POOL_SIZE = 8;
 	thread threads[THREAD_POOL_SIZE];
 	string str;
 
-	for (uint32_t i = 0; i < difficulty; ++i) 
+	for (uint32_t i = 0; i < difficulty; ++i)
 	{
 		str[i] = '0';
 	}
 
-	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++) 
-	{	
+	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++)
+	{
 		threads[i] = thread(&Block::MineBlockThread, this, str, i, THREAD_POOL_SIZE, difficulty);
 	}
 
-	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++) 
+	for (uint8_t i = 0; i < THREAD_POOL_SIZE; i++)
 	{
 		threads[i].join();
 	}
@@ -82,17 +82,17 @@ void Block::MineBlockMultiThread(uint32_t difficulty)
 	cout << "Block mined: " << hash << endl;
 }
 
-void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncrement, uint32_t difficulty) 
+void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncrement, uint32_t difficulty)
 {
 	int64_t nonceThread = threadIndex;
 	string h;
-	do 
+	do
 	{
 		if(hashFound)
 			return;
 		nonceThread += threadIncrement;
 		h = CalculateHash(nonceThread);
-	} 
+	}
 	while (h.substr(0, difficulty) != str);
 	hash = h;
 	nonce = nonceThread;

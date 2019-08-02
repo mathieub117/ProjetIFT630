@@ -15,7 +15,7 @@
 #define SHA_PER_ITERATIONS 8'388'608
 #define NUMBLOCKS (SHA_PER_ITERATIONS + BLOCK_SIZE - 1) / BLOCK_SIZE
 
-static size_t difficulty = 1;
+static size_t difficulty = 5;
 
 // Output string by the device read by host
 char *g_out = nullptr;
@@ -24,6 +24,7 @@ int *g_found = nullptr;
 
 static uint64_t nonce = 0;
 static uint64_t user_nonce = 0;
+//static char* previousash ;
 
 // First timestamp when program starts
 static std::chrono::high_resolution_clock::time_point t1;
@@ -84,10 +85,10 @@ __global__ void sha256_kernel(char* out_input_string_nonce, unsigned char* out_f
 	uint64_t idx = blockIdx.x * blockDim.x + threadIdx.x;
 	uint64_t nonce = idx + nonce_offset;
 
-	// The first byte we can write because there is the input string at the begining	
+	// The first byte we can write because there is the input string at the begining
 	// Respects the memory padding of 8 bit (char).
 	size_t const minArray = static_cast<size_t>(ceil((in_input_string_size + 1) / 8.f) * 8);
-	
+
 	uintptr_t sha_addr = threadIdx.x * (64) + minArray;
 	uintptr_t nonce_addr = sha_addr + 32;
 
@@ -108,7 +109,7 @@ __global__ void sha256_kernel(char* out_input_string_nonce, unsigned char* out_f
 	if (checkZeroPadding(sha, difficulty) && atomicExch(out_found, 1) == 0) {
 		memcpy(out_found_hash, sha, 32);
 		memcpy(out_input_string_nonce, out, size);
-		memcpy(out_input_string_nonce + size, in, in_input_string_size + 1);		
+		memcpy(out_input_string_nonce + size, in, in_input_string_size + 1);
 	}
 }
 
@@ -133,7 +134,6 @@ void print_state() {
 		std::chrono::duration<double, std::milli> span = t2 - t1;
 		float ratio = span.count() / 1000;
 		std::cout << std::fixed << static_cast<uint64_t>((nonce - user_nonce) / ratio) << " hash(es)/s" << std::endl;
-
 		std::cout << std::fixed << "Nonce : " << nonce << std::endl;
 	}
 
@@ -143,77 +143,138 @@ void print_state() {
 	}
 }
 
+
 int main(int argc, char* argv[]) {
 
 	cudaSetDevice(0);
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+	std::cout << "Bienvenue dans le projet de blockchain!" << std::endl << std::endl;
+	std::cout << "Voici les commandes: " << std::endl;
+	std::cout << "1- addBlock from to amount (from, to sont des string. amount est un double) -> ajoute un block au blockchain" << std::endl;
+	std::cout << "  -> Exemple: addBlock Mathieu Michael 50.00" << std::endl;
+	std::cout << "2- Cuda -> part une version automatique Cude de block mining pour le benchmark" << std::endl;
+	std::cout << "3- quit" << std::endl;
 
-	t1 = std::chrono::high_resolution_clock::now();
-	t_last_updated = std::chrono::high_resolution_clock::now();
+	while(true)
+		{
+			std::string s;
+			std::cin >> s;
 
-	std::string in;
-	
-	std::cout << "Entrez un message : ";
-	std::cin >> in;
+			if(s.find("addBlock") != std::string::npos)
+			{
+				std::string in;
+				std::cin >> in;
+				nonce = 0;
+				const size_t input_size = in.size();
+
+				// Input string for the device
+				char *d_in = nullptr;
+
+				// Create the input string for the device
+				cudaMalloc(&d_in, input_size + 1);
+				cudaMemcpy(d_in, in.c_str(), input_size + 1, cudaMemcpyHostToDevice);
+
+				cudaMallocManaged(&g_out, input_size + 32 + 1);
+				cudaMallocManaged(&g_hash_out, 32);
+				cudaMallocManaged(&g_found, sizeof(int));
+				*g_found = 0;
+
+				pre_sha256();
+
+				size_t dynamic_shared_size = (ceil((input_size + 1) / 8.f) * 8) + (64 * BLOCK_SIZE);
+
+				std::cout << "Shared memory is " << dynamic_shared_size << "B" << std::endl;
+
+				for (;;) {
+					sha256_kernel <<<NUMBLOCKS, BLOCK_SIZE, dynamic_shared_size>>> (g_out, g_hash_out, g_found, d_in, input_size, difficulty, nonce);
+
+					cudaError_t err = cudaDeviceSynchronize();
+					if (err != cudaSuccess) {
+						throw std::runtime_error("Device error");
+					}
+
+					nonce += NUMBLOCKS * BLOCK_SIZE;
+
+					print_state();
+
+					if (*g_found) {
+						break;
+					}
+				}
 
 
-	std::cout << "Nonce : ";
-	std::cin >> user_nonce;
+				cudaFree(g_out);
+				cudaFree(g_hash_out);
+				cudaFree(g_found);
 
-	std::cout << "Difficulte : ";
-	std::cin >> difficulty;
-	std::cout << std::endl;
+				cudaFree(d_in);
+			}
+			else if(s.find("Cuda") != std::string::npos)
+			{
+				long calcTime;
+				t_last_updated = std::chrono::high_resolution_clock::now();
+				calcTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				std::string in = "Mathieu Michael 50.0";
+				for(int i =0; i<10; i++)
+				{
+					nonce = 0;
+					const size_t input_size = in.size();
+
+					// Input string for the device
+					char *d_in = nullptr;
+
+					// Create the input string for the device
+					cudaMalloc(&d_in, input_size + 1);
+					cudaMemcpy(d_in, in.c_str(), input_size + 1, cudaMemcpyHostToDevice);
+
+					cudaMallocManaged(&g_out, input_size + 32 + 1);
+					cudaMallocManaged(&g_hash_out, 32);
+					cudaMallocManaged(&g_found, sizeof(int));
+					*g_found = 0;
+
+					pre_sha256();
+
+					size_t dynamic_shared_size = (ceil((input_size + 1) / 8.f) * 8) + (64 * BLOCK_SIZE);
+
+					std::cout << "Shared memory is " << dynamic_shared_size << "B" << std::endl;
+
+					for (;;) {
+						sha256_kernel <<<NUMBLOCKS, BLOCK_SIZE, dynamic_shared_size>>> (g_out, g_hash_out, g_found, d_in, input_size, difficulty, nonce);
+
+						cudaError_t err = cudaDeviceSynchronize();
+						if (err != cudaSuccess) {
+							throw std::runtime_error("Device error");
+						}
+
+						nonce += NUMBLOCKS * BLOCK_SIZE;
+
+						print_state();
+
+						if (*g_found) {
+							break;
+						}
+					}
 
 
-	const size_t input_size = in.size();
+					cudaFree(g_out);
+					cudaFree(g_hash_out);
+					cudaFree(g_found);
 
-	// Input string for the device
-	char *d_in = nullptr;
+					cudaFree(d_in);
+				}
+				std::cout << "Temps pour Cuda: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << std::endl;
 
-	// Create the input string for the device
-	cudaMalloc(&d_in, input_size + 1);
-	cudaMemcpy(d_in, in.c_str(), input_size + 1, cudaMemcpyHostToDevice);
 
-	cudaMallocManaged(&g_out, input_size + 32 + 1);
-	cudaMallocManaged(&g_hash_out, 32);
-	cudaMallocManaged(&g_found, sizeof(int));
-	*g_found = 0;
-
-	nonce += user_nonce;
-
-	pre_sha256();
-
-	size_t dynamic_shared_size = (ceil((input_size + 1) / 8.f) * 8) + (64 * BLOCK_SIZE);
-
-	std::cout << "Shared memory is " << dynamic_shared_size << "B" << std::endl;
-
-	for (;;) {
-		sha256_kernel <<<NUMBLOCKS, BLOCK_SIZE, dynamic_shared_size>>> (g_out, g_hash_out, g_found, d_in, input_size, difficulty, nonce);
-
-		cudaError_t err = cudaDeviceSynchronize();
-		if (err != cudaSuccess) {
-			throw std::runtime_error("Device error");
-		}
-
-		nonce += NUMBLOCKS * BLOCK_SIZE;
-
-		print_state();
-
-		if (*g_found) {
-			break;
-		}
+			}
+			else if(s.find("quit") != std::string::npos)
+			{
+				std::cout << "quitter..." << std::endl;
+				break;
+			}
 	}
-
-
-	cudaFree(g_out);
-	cudaFree(g_hash_out);
-	cudaFree(g_found);
-
-	cudaFree(d_in);
 
 	cudaDeviceReset();
 
-	system("pause");
 
 	return 0;
 }
