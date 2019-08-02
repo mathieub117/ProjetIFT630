@@ -1,6 +1,5 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "msglib.h"
 
 #include <iostream>
 #include <chrono>
@@ -11,12 +10,9 @@
 #include <cassert>
 #include "projetIFT630.h"
 
-#define SHOW_INTERVAL_MS 500
 #define BLOCK_SIZE 256
 #define SHA_PER_ITERATIONS 8'388'608
 #define NUMBLOCKS (SHA_PER_ITERATIONS + BLOCK_SIZE - 1) / BLOCK_SIZE
-
-struct messageBuffer { std::string hash; };
 
 static size_t difficulty = 5;
 
@@ -27,6 +23,7 @@ int *g_found = nullptr;
 
 static uint64_t nonce = 0;
 
+//verification pour voir si on a trouver le bon hash
 __device__ bool checkZeroPadding(unsigned char* sha, size_t difficulty) {
 
 	for (size_t cur_byte = 0; cur_byte < difficulty / 2; ++cur_byte) {
@@ -67,6 +64,8 @@ __device__ size_t nonce_to_str(uint64_t nonce, unsigned char* out) {
 
 
 extern __shared__ char array[];
+
+// Program du kernel
 __global__ void sha256_kernel(char* out_input_string_nonce, unsigned char* out_found_hash, int *out_found, const char* in_input_string, size_t in_input_string_size, size_t difficulty, uint64_t nonce_offset) 
 {
 
@@ -111,6 +110,7 @@ __global__ void sha256_kernel(char* out_input_string_nonce, unsigned char* out_f
 	}
 }
 
+//Verification pour voir si il y a des erreurs
 void pre_sha256() {
 	checkCudaErrors(cudaMemcpyToSymbol(dev_k, host_k, sizeof(host_k), 0, cudaMemcpyHostToDevice));
 }
@@ -125,15 +125,8 @@ void print_hash(const unsigned char* sha256)
 	std::cout << std::dec << std::endl;
 }
 
-void print_state() 
-{
-	if (*g_found) 
-	{
-		print_hash(g_hash_out);
-	}
-}
-
-void addBlock(std::string hash) 
+//on mine notre bloque
+void mineBlock(std::string hash) 
 {
 	nonce = 0;
 	const size_t input_size = hash.size();
@@ -164,14 +157,13 @@ void addBlock(std::string hash)
 
 		nonce += NUMBLOCKS * BLOCK_SIZE;
 
-		print_state();
-
-		if (*g_found) 
+		if (*g_found) //Condition de fin de boucle
 		{
+			print_hash(g_hash_out);
 			break;
 		}
 	}
-
+	//Libere la memoire des pointer declarer sur le device
 	cudaFree(g_out);
 	cudaFree(g_hash_out);
 	cudaFree(g_found);
@@ -198,7 +190,7 @@ int main(int argc, char* argv[])
 		{
 			std::string newHash(h);
 			newHash += i;
-			addBlock(newHash);
+			mineBlock(newHash);
 		}
 		std::cout << "Temps pour Cuda: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << std::endl;
 		return 0;
@@ -220,7 +212,7 @@ int main(int argc, char* argv[])
 		{
 			std::string in;
 			std::cin >> in;
-			addBlock(in);
+			mineBlock(in);
 		}
 		else if(s.find("cuda") != std::string::npos)
 		{
@@ -229,7 +221,7 @@ int main(int argc, char* argv[])
 			std::string in = "\nFROM:Mathieu\nTO:Michael\nAMOUNT:50.0";
 			for(int i =0; i<10; i++)
 			{
-				addBlock(in);
+				mineBlock(in);
 			}
 			std::cout << "Temps pour Cuda: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << std::endl;
 
