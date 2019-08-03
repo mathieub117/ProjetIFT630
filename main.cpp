@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int main() 
+int main(int argc, char* argv[]) 
 {
 	cout << "Bienvenue dans le projet de blockchain!" << endl << endl;
 	cout << "Voici les commandes: " << endl;
@@ -13,9 +13,10 @@ int main()
 	cout << "  -> Exemple: addBlock mathieu michael 50.00" << endl;
 	cout << "2- sequentiel -> part une version automatique sequentiel de block mining pour 		benchmark" << endl;
 	cout << "3- multithread -> part une version multithread de block mining" << endl;
+	cout << "4- cuda -> part une version CUDA de block mining" << endl;
 	cout << "5- quit" << endl;
 
-	uint32_t difficulty = 5;
+	uint32_t difficulty = (argc == 1) ? 5 : atoi(argv[1]);
 	Blockchain blockchain = Blockchain(difficulty);
 	int blockCount = blockchain.BlockCount();
 	long calcTime;
@@ -53,6 +54,10 @@ int main()
 				blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 0.50), executionType::multithread);
 			}
 			cout << "Temps pour multithread: " << chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - calcTime << " ms." << endl;
+		}
+		else if(s.find("cuda") != string::npos) 
+		{
+			blockchain.AddBlock(Block(++blockCount, "mathieu", "michael", 2.5), executionType::cuda);
 		}
 		else if(s.find("quit") != string::npos) 
 		{

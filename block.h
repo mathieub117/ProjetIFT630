@@ -16,6 +16,9 @@ public:
 
 	//Multithread
 	void MineBlockMultiThread(uint32_t difficulty);
+
+	//CUDA
+	void MineBlockCUDA(uint32_t difficulty);
 private:
 	uint32_t index;
 	//int64_t nonce; //On va l'utiliser comme variable local et non comme attribut objet

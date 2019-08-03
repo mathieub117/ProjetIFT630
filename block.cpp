@@ -1,6 +1,7 @@
-//#include "mailslot.h"
 #include "block.h"
 #include "sha256.h"
+#include "msglib.h"
+#include "pcslib.h"
 
 #include <sstream>
 #include <thread>
@@ -95,15 +96,41 @@ void Block::MineBlockThread(string str, uint8_t threadIndex, uint8_t threadIncre
 	}
 	while (h.substr(0, difficulty) != str);
 	hash = h;
-	nonce = nonceThread;
 	hashFound = true;
 }
 
+void Block::MineBlockCUDA(uint32_t difficulty)
+{
+	string str;
+	int64_t nonce = -1;
 
+	for (uint32_t i = 0; i < difficulty; ++i)
+	{
+		str += '0';
+	}
+
+    //CreateProgram mine dans CUDA
+	stringstream ss;
+	string diff = to_string(difficulty);
+	ss << timestamp << data;
+	char* cHash;
+	Pcs cuda((char *)"projetIFT630", (char*)ss.str().c_str(), (char*)diff.c_str());
+	cuda.Join();
+	
+	//Recevoir hash en reponse par IPC message queue
+	/*messageBuffer message;
+	Port Porte;
+	key_t key_porte = 99887766;
+	Porte.Create(key_porte);
+	Porte.Recoit(&message, sizeof(char) * 64);
+	hash = message.hash;*/
+
+	//cout << "Block mined: " << hash << endl;
+}
 
 string Block::CalculateHash(int64_t nonce) const
 {
 	stringstream ss;
-	ss << index << timestamp << data << nonce << previousHash;
+	ss << index << timestamp << data << previousHash << nonce;
 	return sha256(ss.str());
 }

@@ -1,0 +1,109 @@
+/*******************************************************************/
+/*                                                                 */
+/*  Implantation des fonctions de la classe processus              */
+/*                                                                 */
+/*******************************************************************/
+/*******************************************************************/
+
+#include "pcslib.h"
+
+/*******************************************************************/
+/*                                                                 */
+/*                  Constructeur                                   */
+/*                                                                 */
+/*  Cette routine cree un objet processus bidon.  Elle doit etre   */
+/*  utilisee conjointement avec la fonction fork.                  */  
+/*                                                                 */
+/*                                                                 */
+/*******************************************************************/
+Pcs::Pcs() {}
+
+/*******************************************************************/
+/*                                                                 */
+/*                  Constructeur                                   */
+/*                                                                 */
+/*  Cette routine permet de creer un processus.  Le processus      */
+/*  executera le code contenu dans le fichier specifie en          */
+/*  parametre.  La fonction retournera l'identificateur            */
+/*  du nouveau processus.                                          */
+/*                                                                 */
+/*  PARAMETRES                                                     */
+/*                                                                 */
+/*    fichier : ce fichier contient le code executable du nouveau  */
+/*              processus.                                         */
+/*                                                                 */
+/*                                                                 */
+/*******************************************************************/
+Pcs::Pcs(char *fichier, char* hash, char* difficulty)
+{
+   if ((pcsid = fork()) == -1)
+      perror("Classe Pcs Function Fork (Fork)");      
+   else 
+     if (pcsid == 0)
+       if (execl(fichier, fichier, hash, difficulty, (char *)0)== -1)
+          perror("Classe Pcs Function Fork (exec)");
+}
+/*******************************************************************/
+/*                                                                 */
+/*                  F O R K                                        */
+/*                                                                 */
+/*  Cette routine permet de creer un processus.  Le processus      */
+/*  executera le code contenu dans le fichier specifie en          */
+/*  parametre.  La fonction retournera l'identificateur (pcsid)    */
+/*  du nouveau processus.                                          */
+/*                                                                 */
+/*  PARAMETRES                                                     */
+/*                                                                 */
+/*    fichier : ce fichier contient le code executable du nouveau  */
+/*              processus.                                         */
+/*                                                                 */
+/*******************************************************************/
+
+
+void Pcs::Fork(char *fichier, char* hash, char* difficulty)
+{
+   if ((pcsid = fork()) == -1)
+      perror("Classe Pcs Function Fork (Fork)");      
+   else 
+     if (pcsid == 0)
+       if (execl(fichier,fichier, hash, difficulty, (char *)0)== -1)
+          perror("Classe Pcs Function Fork (exec)");
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*                D e t r u i t                                    */
+/*                                                                 */
+/*  Cette routine detruit le processus                             */
+/*                                                                 */
+/*******************************************************************/
+void Pcs::Detruit()
+{
+  if (kill(pcsid, SIGKILL) == -1)
+     perror("Classe Pcs Function Kill");
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*                        J o i n                                  */
+/*                                                                 */
+/*  Cette routine permet au processus appelant d'attendre la fin   */
+/*  de l'execution d'un processus qu'il a cree avant de poursuivre */
+/*  la sienne.                                                     */
+/*                                                                 */
+/*******************************************************************/
+
+int Pcs::Join()
+{
+   do 
+   {
+      if ((pcsid = waitpid(pcsid,&status,WNOHANG)) == -1)
+         perror("Classe Pcs Function Join");
+      else if (pcsid == 0) 
+      {
+	 time(&t);
+	 sleep(1);
+      }
+   } while (pcsid == 0);
+   return(status);
+}
