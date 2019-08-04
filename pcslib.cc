@@ -60,19 +60,19 @@ Pcs::Pcs(char *fichier, char* hash, char* difficulty)
 /*******************************************************************/
 
 
-void Pcs::Fork(char *fichier)
+void Pcs::Fork(char *fichier, char* hash, char* difficulty)
 {
    if ((pcsid = fork()) == -1)
       perror("Classe Pcs Function Fork (Fork)");      
    else 
      if (pcsid == 0)
-       if (execl(fichier,fichier, (char *)0)== -1)
+       if (execl(fichier,fichier, hash, difficulty, (char *)0)== -1)
           perror("Classe Pcs Function Fork (exec)");
 }
 
 /*******************************************************************/
 /*                                                                 */
-/*                D e t r u i t                                  */
+/*                D e t r u i t                                    */
 /*                                                                 */
 /*  Cette routine detruit le processus                             */
 /*                                                                 */
@@ -95,8 +95,15 @@ void Pcs::Detruit()
 
 int Pcs::Join()
 {
-   if ((pcsid = waitpid(pcsid,&status,WUNTRACED)) == -1)
-      perror("Classe Pcs Function Join");
+   do 
+   {
+      if ((pcsid = waitpid(pcsid,&status,WNOHANG)) == -1)
+         perror("Classe Pcs Function Join");
+      else if (pcsid == 0) 
+      {
+	 time(&t);
+	 sleep(1);
+      }
+   } while (pcsid == 0);
    return(status);
-               
 }

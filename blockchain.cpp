@@ -13,6 +13,8 @@ void Blockchain::AddBlock(Block newBlock, executionType type)
 		newBlock.MineBlock(difficulty);
 	else if (type == executionType::multithread)
 		newBlock.MineBlockMultiThread(difficulty);
+	else if (type == executionType::cuda)
+		newBlock.MineBlockCUDA(difficulty);
 	chain.push_back(newBlock);
 }
 

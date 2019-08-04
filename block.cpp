@@ -112,20 +112,20 @@ void Block::MineBlockCUDA(uint32_t difficulty)
     //CreateProgram mine dans CUDA
 	stringstream ss;
 	string diff = to_string(difficulty);
-	ss << index << timestamp << data << previousHash;
+	ss << timestamp << data;
 	char* cHash;
 	Pcs cuda((char *)"projetIFT630", (char*)ss.str().c_str(), (char*)diff.c_str());
 	cuda.Join();
 	
 	//Recevoir hash en reponse par IPC message queue
-	messageBuffer message;
+	/*messageBuffer message;
 	Port Porte;
 	key_t key_porte = 99887766;
 	Porte.Create(key_porte);
 	Porte.Recoit(&message, sizeof(char) * 64);
-	hash = message.hash;
+	hash = message.hash;*/
 
-	cout << "Block mined: " << hash << endl;
+	//cout << "Block mined: " << hash << endl;
 }
 
 string Block::CalculateHash(int64_t nonce) const
